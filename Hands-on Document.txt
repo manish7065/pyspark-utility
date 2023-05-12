@@ -1,0 +1,529 @@
+﻿Hands on
+________________
+
+
+$> cd ~
+$> cd big-data-hadoop-spark-developer-training-simplilearn/
+$> cd dataset
+	Hadoop Commands
+HDFS Commands
+All HDFS Commands will be invoked through the script by name hdfs
+$> hdfs –help
+	-mkdir
+This command will create a directory in HDFS
+$> hdfs dfs -mkdir /user/$USER/workspace
+	-ls
+$> hdfs dfs -ls /user/$USER/workspace
+	To copy the data from LFS to HDFS
+THere are 2 ways
+-put
+$> hdfs dfs -put words1.txt /user/$USER/workspace
+$> hdfs dfs -ls /user/$USER/workspace
+	-copyFromLocal
+$> hdfs dfs -copyFromLocal words2.txt /user/$USER/workspace
+$> hdfs dfs -ls /user/$USER/workspace
+	Copy the data from HDFS to LFS
+-get
+$> rm words1.txt words2.txt
+$> hdfs dfs -get /user/$USER/workspace/words1.txt .
+	-copyToLocal
+$> hdfs dfs -copyToLocal /user/$USER/workspace/words2.txt .
+	-touchz
+It will create an empty file in HDFS
+$> hdfs dfs -touchz /user/$USER/workspace/words3.txt
+$> hdfs dfs -ls /user/$USER/workspace/
+	-appendToFile
+This options will append the contents of LFS to HDFS FIle
+$> hdfs dfs -appendToFile words1.txt words2.txt /user/$USER/workspace/words3.txt
+	-cat 
+$> hdfs dfs -cat /user/$USER/workspace/words3.txt
+	-getmerge
+$> hdfs dfs -getmerge /user/$USER/workspace/*.txt words.txt
+	-setrep
+$> hdfs dfs -setrep 5 /user/$USER/workspace/
+$> dfs dfs -put words3.txt /user/$USER/workspace/words4.txt
+
+
+	-test
+1. -e : If the path exists, returns 0
+2. -z : If the given file is a zero length, returns 0
+3. -d : If the path is directory, return 0
+$> hdfs dfs -test -e /user/$USER/workspace1
+$> echo $?
+	
+
+$> hdfs dfs -touchz /user/$USER/workspace/words5.txt
+$> hdfs dfs -test -z /user/$USER/workspace/words5.txt
+$> echo $?
+	
+
+$> 
+$> echo $?hdfs dfs -test -d /user/$USER/workspace/
+	
+
+$> hdfs getconf -confKey dfs.replication
+	
+
+$> hdfs getconf -confKey dfs.blocksize
+	YARN Commands
+jar
+$> cd /opt/cloudera/parcels/CDH/lib/hadoop-mapreduce
+	
+
+$> echo $USER
+$> yarn jar hadoop-mapreduce-examples-3.1.1.7.2.15.1-1.jar wordcount /user/naveenpntrainergmail/workspace/ /user/naveenpntrainergmail/output_09_04
+
+
+hdfs dfs -cat /user/$USER/output_09_01/part-r-00000
+
+
+
+
+yarn jar batch07-mapreduce-1.0-SNAPSHOT.jar org.simplilearn.analytics.WordCountDriver /user/naveenpntrainergmail/workspace /user/naveenpntrainergmail/output_10_01
+
+
+	application
+$> watch "yarn application -list"
+	$> yarn application -list -appStates FINISHED,SUBMITTED
+	$> yarn application -list -appStates KILLED
+	$> yarn application -list -appTypes MapReduce
+	
+
+$> yarn application -list -appStates FINISHED,RUNNING -appTypes SPARK 
+	$> yarn application -list -appStates SUBMITTED,FAILED -appTypes SPARK 
+	yarn application -kill application_1667785197622_3549
+  
+
+
+
+Hive
+hive> SET hive.execution.engine;
+	Important Points
+* When you create a database , it creates a directory in hive warehouse location(HDFS).
+* WHen you create a table, it creates a directory in hive warehouse under the database
+hive> SET hive.metastore.warehouse.dir;
+/user/hive/warehouse
+	$> hdfs dfs -ls /user/hive/warehouse | grep naveen
+hive> CREATE DATABASE naveen_analytics;
+hive> show databases like '%naveen%';
+$> hdfs dfs -ls /user/hive/warehouse | grep naveen
+drwxrwxr-x   - hive hive          0 2023-02-13 15:54 /user/hive/warehouse/naveen_analytics.db
+	hive> DROP DATABASE naveen_analytics;
+hive> SHOW DATABASES LIKE '%naveen%';
+	Create Database
+hive> CREATE DATABASE IF NOT EXISTS naveen_analytics COMMENT 'Holds analytics data' WITH DBPROPERTIES ('edited-by' = 'Naveen');
+
+
+hive> SHOW DATABASES LIKE '%naveen%';
+	Describe Database
+hive> DESCRIBE DATABASE naveen_analytics;
+hive> DESCRIBE DATABASE EXTENDED naveen_analytics;
+	$> hdfs dfs -ls /ns1/warehouse/tablespace/external/hive/ | grep alen
+	Switch to a database
+hive> USE naveen_analytics;
+hive> SHOW TABLES;
+	Table Creation
+There are two types of tables
+1. Internal Table / Managed Tables
+2. External Tables
+Internal Table
+hive> CREATE TABLE users(
+user_id INT COMMENT 'holds user id',
+first_name STRING,
+last_name STRING,
+gender STRING,
+designation STRING,
+city STRING,
+country STRING,
+dob Date
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
+LINES TERMINATED by '\n'
+STORED AS TextFile
+tblproperties(
+"skip.header.line.count"="1",
+"skip.footer.line.count"="1"
+);
+
+
+hive> LOAD DATA INPATH '/user/naveenpntrainergmail/users1.dat' INTO TABLE naveen_analytics.users;
+	hive> DESCRIBE users;
+hive> DESCRIBE EXTENDED users;
+hive> DESCRIBE FORMATTED users;
+	External Table
+hive> CREATE EXTERNAL TABLE users_ext(
+user_id INT COMMENT 'holds user id',
+first_name STRING,
+last_name STRING,
+gender STRING,
+designation STRING,
+city STRING,
+country STRING,
+dob Date
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
+LINES TERMINATED by '\n'
+STORED AS TextFile
+LOCATION '/user/naveenpntrainergmail/user_ext'
+tblproperties(
+"skip.header.line.count"="1",
+"skip.footer.line.count"="1"
+);
+
+
+hive> DESCRIBE FORMATTED users_ext;
+
+
+hive> LOAD DATA INPATH '/user/naveenpntrainergmail/users1.dat' INTO TABLE users_ext;
+hive> SELECT * FROM users_ext;
+	
+
+Loading Data into Hive Tables
+1. Loading the data from LFS to Hive Tables →  Not supported in Labs
+2. Loading the data from HDFS to Hive Tables.
+$> hdfs dfs -put users1.dat /user/$USER
+hive> LOAD DATA INPATH '/user/naveenpntrainergmail/users1.dat' INTO TABLE users;
+hive> SELECT * FROM users;
+	$> hdfs dfs -put users2.dat /user/hive/warehouse/naveen_analytics.db/users/
+hive> SELECT * FROM users;
+	Executing Hive Query via script
+table_creation_and_loading.hql
+CREATE TABLE naveen_analytics.users(
+user_id INT COMMENT 'holds user id',
+first_name STRING,
+last_name STRING,
+gender STRING,
+designation STRING,
+city STRING,
+country STRING,
+dob Date
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY '|'
+LINES TERMINATED by '\n'
+STORED AS TextFile
+tblproperties(
+"skip.header.line.count"="1",
+"skip.footer.line.count"="1"
+);
+
+
+LOAD DATA INPATH '/user/naveenpntrainergmail/users1.dat' INTO TABLE naveen_analytics.users;
+	Executing .hql files
+$> hive -f table_creation_and_loading.hql
+	Complex Data Types
+ARRAY
+If you want to represent collection of columns as a single column
+hive>CREATE TABLE employee_array(
+id INT,
+name ARRAY<STRING>,
+companyname STRING,
+languages ARRAY<STRING>
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '$'
+LINES TERMINATED BY '\n'
+STORED AS TextFile;
+hive> LOAD DATA INPATH '/user/naveenpntrainergmail/ArrayFile.txt' INTO TABLE naveen_analytics.employee_array;
+
+
+$> hdfs dfs -put ArrayFile.txt /user/$USER
+hive> select name[0] from employee_array;
+	MAP
+If you want to represent data in the form of key and value pair.
+hive> CREATE TABLE employee_map(
+id INT,
+name ARRAY<STRING>,
+companyname STRING,
+languages ARRAY<STRING>,
+salary BIGINT,
+deductions MAP<STRING,INT>
+)
+ROW FORMAT DELIMiTED FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '$'
+MAP KEYS TERMINATED by '#'
+LINES TERMINATED BY '\n'
+STORED AS TextFile;
+
+
+hive> LOAD DATA INPATH '/user/naveenpntrainergmail/MapFile.txt' INTO TABLE naveen_analytics.employee_map;
+hive> select deductions["Federal Taxes"] from employee_map where deductions["Federal Taxes"] > 1000 ;
+	STRUCT
+
+
+hive> CREATE TABLE employee_struct(
+id INT,
+name ARRAY<STRING>,
+companyname STRING,
+languages ARRAY<STRING>,
+salary BIGINT,
+deductions MAP<STRING,INT>,
+address STRUCT<state:STRING,city:STRING,pidcode:BIGINT>
+)
+ROW FORMAT DELIMiTED FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY '$'
+MAP KEYS TERMINATED by '#'
+LINES TERMINATED BY '\n'
+STORED AS TextFile;
+
+
+$> hdfs dfs -put StructFile.txt /user/$USER
+
+
+hive> LOAD DATA INPATH '/user/naveenpntrainergmail/StructFile.txt' INTO TABLE naveen_analytics.employee_struct;
+hive> select * from employee_struct;
+hive> select address.state from employee_struct;
+	Partitions
+Static Partitions
+hdfs dfs -put Transactions.txt /user/$USER
+CREATE TABLE transactions(
+txnno INT,
+txndate STRING,
+custno INT,
+amount DOUBLE,
+category STRING,
+product STRING,
+city STRING,
+state STRING,
+spendby STRING
+)
+ROW FORMAT DELIMiTED FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TextFile;
+
+
+
+
+
+
+LOAD DATA INPATH '/user/naveenpntrainergmail/Transactions.txt' INTO TABLE naveen_analytics.transactions;
+
+
+
+
+
+
+
+
+CREATE TABLE transactions_partitioned(
+txnno INT,
+txndate STRING,
+custno INT,
+amount DOUBLE,
+product STRING,
+city STRING,
+state STRING,
+spendby STRING
+)
+PARTITIONED BY(category STRING)
+ROW FORMAT DELIMiTED FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+STORED AS TextFile;
+
+
+select distinct(category) from transactions;
+desc transactions_partitioned ;
+
+
+FROM transactions txn INSERT INTO TABLE transactions_partitioned PARTITION(category='Air Sports')
+select txn.txnno,txn.txndate,txn.custno,txn.amount,txn.product,txn.city,txn.state,txn.spendby where category='Air Sports';
+
+
+	hive>
+	
+
+RDD's
+$> numbers = [1,2,3,4,5,6,7,8,9,10]
+$> numbers_rdd = sc.parallelize(numbers)
+$> type(numbers_rdd)
+$> mul_by_2_rdd = numbers_rdd.map(lambda x:x*2)
+$> filter_by_5 = mul_by_2_rdd.filter(lambda e:e%5==0)
+$> filter_by_5.count()
+
+
+for e in  mul_by_2_rdd.collect():
+  print(e)
+
+
+	> hdfs dfs -put u1.user /user/$USER
+
+
+
+
+>>> user_rdd = sc.textFile('/user/naveenpntrainergmail/u1.user')
+>>> for record in user_rdd.collect():
+      print(record)
+	
+
+from pyspark.sql import SparkSession
+
+
+if __name__ == '__main__':
+    # Step 01 - Create Spark Session
+    spark = SparkSession.builder.appName("Spark Demo").master("local").getOrCreate()
+    # Step 02 : Create Spark Context
+    sc = spark.sparkContext
+    # Step 03 : Create RDD by loading the file
+    user_rdd = sc.textFile("../dataset/user.csv")
+
+
+    # Print Top 5 records
+    for record in user_rdd.take(5):
+        print(record)
+	   Problem Statements Set01:  
+1. Remove header and print the first five records.
+2. Select 'id' and 'designation' columns
+3. Filter records whose designation is technician and print 'id', age designation columns.
+4. Save the results into a file
+
+
+DataFrame 
+* .show(n=10, truncate=False)
+* .printSchema()
+* .select
+* .filter(predicate)
+* .withColumn
+
+
+Create DataFrame from Collection
+$> employee_records = [(1,"Naveen"), (2,"Nikshay"), (3,"Kishore")]
+$> columns = ["id", "name"]
+$> employee_df = spark.createDataFrame(employee_records).toDF(*columns)
+$> employee_df.show()
+$> employee_df.printSchema()
+
+
+	Create DataFrame from File
+$> import os
+$> dfr = spark.read
+$> user_df = dfr.csv(path=f"/user/{os.environ['USER']}/u1.user", sep="|", header=True)
+$> user_df.show(n=60, truncate=False)
+	Convert RDD to DataFrame
+$> employee_records = [(1,"Naveen"), (2,"Nikshay"), (3,"Kishore")]
+$> rdd = spark.sparkContext.parallelize(employee_records)
+
+
+$> df1 = rdd.toDF()
+
+
+$> columns = ["id", "name"]
+$> df2 = rdd.toDF(columns)
+$> df2.show()
+
+
+
+
+$> df3 = spark.createDataFrame(rdd, schema=columns)
+$> df3.show()
+
+
+# Basic Operations
+
+$> import os
+$> user_df = spark.read.csv(path=f"/user/{os.environ['USER']}/u1.user", sep="|", header=True)
+$> user_df.show(n=60, truncate=False)
+$> user_df.select("id","designation").show()
+$> from pyspark.sql.functions import *
+$> user_df.select(col("id"), col("designation").alias("desig"))
+$> df1 = user_df.filter(col("designation") == 'technician')
+$> df1.show()
+
+
+$> df2 = user_df.filter(col("designation") != 'technician')
+$> df2.show()
+
+
+$> df3 = user_df.filter(col("designation").isin(['technician','executive']))
+$> df3.show()
+
+
+# Derive new columns :--------------------------------------------------------------------------
+
+$> import os
+$> from pyspark.sql.functions import *
+$> user_df = spark.read.csv(path=f"/user/{os.environ['USER']}/u1.user", sep="|", header=True, inferSchema=True)
+
+
+$> result_df = user_df.withColumn("category",lit('Default Value'))
+$> result_df.show()
+
+$> result_df = user_df.withColumn("category", when(col('salary')))
+$> result_df.show()
+
+
+$> result_df = user_df.withColumn("category", when(col('salary') < 50000, "Low Salary").when((col('salary') >= 50000) & (col('salary') < 100000), "Good Salary").otherwise("High Salary"))
+
+
+$> result_df.groupBy(col("category")).count().show()
+
+
+# Group By-----------------------------------------------------------------
+
+$> result_df.groupBy(col("category")).agg(
+min('salary').alias('minimum_salary'),
+max('salary').alias('maximum_salary'),
+avg('salary').alias('average_salary'),
+).show()
+
+
+$> result_df.groupBy(col("category")).agg(
+min('salary').alias('minimum_salary'),
+max('salary').alias('maximum_salary'),
+avg('salary').alias('average_salary'),
+).sort(col('maximum_salary'), ascending=False).show()
+	* 50000 > salary ⇒ Low Salary
+* 50000 <= salary < 100000 ⇒ Good Salary
+* 100000 < salary ⇒ High Salary
+
+
+# Grouping Sorting and Aggregations-----------------------------------------------------
+$> import os
+$> from pyspark.sql.functions import *
+$> user_df = spark.read.csv(path=f"/user/{os.environ['USER']}/u1.user", sep="|", header=True, inferSchema=True)
+
+
+$> result_df.groupBy(col("category")).agg(
+min('salary').alias('minimum_salary'),
+max('salary').alias('maximum_salary'),
+avg('salary').alias('average_salary'),
+).show()
+
+
+$> result_df.groupBy(col("category")).agg(
+min('salary').alias('minimum_salary'),
+max('salary').alias('maximum_salary'),
+avg('salary').alias('average_salary'),
+).sort(col('maximum_salary'), ascending=False).show()
+
+
+#Custom Schema---------------------------------------------------------
+$> import os
+$> from pyspark.sql.functions import *
+$> from pyspark.sql.types import *
+
+
+$> user_schema = StructType([
+StructField("user_id", IntegerType()),
+StructField("age", IntegerType()),
+StructField("gender", StringType()),
+StructField("designation", StringType()),
+StructField("salary", IntegerType()),
+])
+$> user_df = spark.read.csv(path=f"/user/{os.environ['USER']}/u1.user", sep="|", header=True, schema=user_schema)
+
+
+$> result_df = user_df.filter(col('designation')=='other')
+$> result_df.write.csv(
+path=f"/user/{os.environ['USER']}/output_21_02", 
+header=True,
+mode="overwrite",sep="|")
+
+
+hdfs dfs -cat /user/naveenpntrainergmail/output_21_02/part*
+	
+
+SPARK_HOME = 'C:\big-data-hadoop-spark-developer-training-simplilearn-main\frameworks\apache-spark\spark-2.4.8-bin-hadoop2.7'
+HADOOP_HOME = 'C:\big-data-hadoop-spark-developer-training-simplilearn-main\frameworks\apache-spark\hadoop'
+
+
+%HADOOP_HOME%\bin
+%SPARK_HOME%\bin
